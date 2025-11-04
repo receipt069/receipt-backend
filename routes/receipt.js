@@ -3,11 +3,11 @@ const router = express.Router();
 const Receipt = require("../models/Receipt");
 const Counter = require("../models/Counter");
 
-// routes/receipt.js (peek endpoint)
+// routes/receipt.js
 router.get("/next", async (req, res) => {
   const counter = await Counter.findOne({ name: "receiptCounter" });
-  const nextSeq = (counter?.seq ?? 0) + 1;
-  res.json({ nextReceiptNo: `RCPT-${nextSeq}` });
+  const next = (counter?.seq ?? 0) + 1;
+  res.json({ nextReceiptNo: `RCPT-${next}` });
 });
 
 
