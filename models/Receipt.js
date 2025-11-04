@@ -14,15 +14,15 @@ const receiptSchema = new mongoose.Schema({
   receivedTo: String,
 });
 
-// Auto-increment receipt number on save
+// ✅ Auto-increment receipt number ONLY on save()
 receiptSchema.pre("save", async function (next) {
-  if (this.receiptNo) return next(); // skip if already set (e.g., manual override)
+  if (this.receiptNo) return next(); // allow overriding manually
 
   try {
     const counter = await Counter.findOneAndUpdate(
       { name: "receiptCounter" },
-      { $inc: { seq: 1 } },     // <-- increment by 1
-      { new: true, upsert: true }
+      { $inc: { seq: 1 } },          // ✅ increment by 1
+      { new: true, upsert: true }    // return updated value
     );
 
     this.receiptNo = `RCPT-${counter.seq}`;
