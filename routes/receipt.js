@@ -3,20 +3,13 @@ const router = express.Router();
 const Receipt = require("../models/Receipt");
 const Counter = require("../models/Counter");
 
-// ✅ Get next available receipt number
+// routes/receipt.js (peek endpoint)
 router.get("/next", async (req, res) => {
-  try {
-    const counter = await Counter.findOneAndUpdate(
-      { name: "receiptCounter" },
-      { $inc: { seq: 1 } },
-      { new: true, upsert: true }
-    );
-    res.status(200).json({ nextReceiptNo: `RCPT-${counter.seq}` });
-  } catch (error) {
-    console.error("❌ Error fetching next receipt number:", error);
-    res.status(500).json({ error: "Failed to fetch next receipt number" });
-  }
+  const counter = await Counter.findOne({ name: "receiptCounter" });
+  const nextSeq = (counter?.seq ?? 0) + 1;
+  res.json({ nextReceiptNo: `RCPT-${nextSeq}` });
 });
+
 
 // ✅ Save receipt
 router.post("/save", async (req, res) => {
