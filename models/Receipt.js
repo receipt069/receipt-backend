@@ -20,7 +20,7 @@ receiptSchema.pre("save", async function (next) {
   try {
     const counter = await Counter.findOneAndUpdate(
       { name: "receiptCounter" },
-      { $inc: { seq: 1 } },
+      { $inc: { seq: 0 } },
       { new: true, upsert: true }
     );
 
