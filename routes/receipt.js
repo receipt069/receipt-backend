@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Receipt = require("../models/Receipt");
 const Counter = require("../models/Counter");
+const GroupDetails = require("../models/GroupDetails");
 
 // /api/receipt/next  (peek only, does NOT increment)
 router.get("/next", async (req, res) => {
@@ -35,36 +36,35 @@ router.post("/save", async (req, res) => {
   }
 });
 
-// ✅ Fetch unique group names (with optional search filter)
-// GET /api/receipt/groups          -> all distinct groupName
-// GET /api/receipt/groups?search=M -> groupName LIKE "M%" (case-insensitive)
+// ✅ Fetch unique group names from group_details (with optional search filter)
+// GET /api/receipt/groups
+// GET /api/receipt/groups?search=MAR
 router.get("/groups", async (req, res) => {
   try {
     const { search } = req.query;
 
-    // If search provided, filter with case-insensitive regex
+    const filter = {};
     if (typeof search === "string" && search.trim()) {
       const term = search.trim();
 
       // escape regex special chars
       const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const regex = new RegExp(escapeRegex(term), "i");
-
-      const groups = await Receipt.find({ groupName: regex })
-        .limit(20)
-        .distinct("groupName");
-
-      return res.status(200).json(groups);
+      filter.groupName = {
+        $regex: new RegExp(escapeRegex(term), "i"), // case-insensitive contains
+      };
     }
 
-    // No search: return all distinct group names
-    const groups = await Receipt.distinct("groupName");
+    const groups = await GroupDetails.find(filter)
+      .limit(20)
+      .distinct("groupName");
+
     res.status(200).json(groups);
   } catch (error) {
     console.error("❌ Error fetching groups:", error);
     res.status(500).json({ error: "Failed to fetch group names" });
   }
 });
+
 
 // ✅ Get total collections by agent
 // Optional query: ?date=DD-MM-YYYY  (filters by collectionDate)
