@@ -35,9 +35,29 @@ router.post("/save", async (req, res) => {
   }
 });
 
-// ✅ Fetch unique group names
+// ✅ Fetch unique group names (with optional search filter)
+// GET /api/receipt/groups          -> all distinct groupName
+// GET /api/receipt/groups?search=M -> groupName LIKE "M%" (case-insensitive)
 router.get("/groups", async (req, res) => {
   try {
+    const { search } = req.query;
+
+    // If search provided, filter with case-insensitive regex
+    if (typeof search === "string" && search.trim()) {
+      const term = search.trim();
+
+      // escape regex special chars
+      const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(escapeRegex(term), "i");
+
+      const groups = await Receipt.find({ groupName: regex })
+        .limit(20)
+        .distinct("groupName");
+
+      return res.status(200).json(groups);
+    }
+
+    // No search: return all distinct group names
     const groups = await Receipt.distinct("groupName");
     res.status(200).json(groups);
   } catch (error) {
@@ -61,13 +81,16 @@ router.get("/agent/:name/total", async (req, res) => {
       collectionAgent: { $regex: `^${escapeRegex(nameTrim)}$`, $options: "i" },
     };
 
-    const matchDate = typeof date === "string" && date.trim()
-      ? { collectionDate: date.trim() }
-      : {};
+    const matchDate =
+      typeof date === "string" && date.trim()
+        ? { collectionDate: date.trim() }
+        : {};
 
     const match = { ...matchAgent, ...matchDate };
 
-    const receipts = await Receipt.find(match).select("cashAmount onlineAmount");
+    const receipts = await Receipt.find(match).select(
+      "cashAmount onlineAmount"
+    );
 
     let totalCash = 0;
     let totalOnline = 0;
