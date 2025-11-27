@@ -21,6 +21,9 @@ mongoose
 const receiptRoutes = require("./routes/receipt");
 const authRoutes = require("./routes/auth"); // new auth route
 
+const memberRoutes = require("./routes/members");
+app.use("/api/members", memberRoutes);
+
 // ✅ Use Routes
 app.use("/api/receipt", receiptRoutes);
 app.use("/api/auth", authRoutes); // register + login routes
@@ -29,6 +32,8 @@ app.use("/api/auth", authRoutes); // register + login routes
 app.get("/", (req, res) => {
   res.send("🚀 Server is running and MongoDB connection working ✅");
 });
+
+
 
 // ✅ Start Server
 const PORT = process.env.PORT || 5000;
